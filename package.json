@@ -1,0 +1,10 @@
+{
+  "name": "code-gym",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/server.ts",
+    "start": "NODE_ENV=production bun src/server.ts",
+    "test": "bun test"
+  }
+}
