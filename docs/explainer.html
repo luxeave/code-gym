@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Gym Explained</title>
+<style>
+  :root {
+    --bg: #faf9f7; --surface: #ffffff; --surface-2: #f2f0ec; --text: #1d1c1a; --muted: #6b6760;
+    --border: #e2ded7; --accent: #c2410c; --accent-soft: #fdeee6; --ok: #15803d; --ok-soft: #e7f5ec;
+    --warn: #a16207; --warn-soft: #fbf3dc; --code-bg: #f5f3ef;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141413; --surface: #1d1c1a; --surface-2: #262522; --text: #ece9e3; --muted: #9c978e;
+      --border: #34322e; --accent: #f08a5d; --accent-soft: #3a241a; --ok: #5fcf8a; --ok-soft: #17301f;
+      --warn: #e5b94e; --warn-soft: #33290f; --code-bg: #191816;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413; --surface: #1d1c1a; --surface-2: #262522; --text: #ece9e3; --muted: #9c978e;
+    --border: #34322e; --accent: #f08a5d; --accent-soft: #3a241a; --ok: #5fcf8a; --ok-soft: #17301f;
+    --warn: #e5b94e; --warn-soft: #33290f; --code-bg: #191816;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; margin: 64px 0 8px; letter-spacing: -0.01em; }
+  h3 { font-size: 1.05rem; margin: 0 0 6px; }
+  p { margin: 0 0 12px; }
+  .lede { font-size: 1.2rem; color: var(--muted); max-width: 640px; }
+  .kicker { color: var(--accent); font-weight: 600; font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; }
+  code, pre { font-family: var(--mono); font-size: .88em; }
+  :not(pre) > code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 8px 0 0; }
+  .term { border-bottom: 1px dashed var(--accent); cursor: help; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; padding: 6px 12px; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 720px) { .grid3 { grid-template-columns: 1fr; } }
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; }
+  details > summary { padding: 12px 16px; cursor: pointer; font-weight: 600; list-style: none; display: flex; gap: 10px; align-items: center; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "+"; font-family: var(--mono); color: var(--accent); width: 1ch; }
+  details[open] > summary::before { content: "−"; }
+  details > .body { padding: 0 16px 16px; }
+  .muted { color: var(--muted); }
+  svg text { font-family: system-ui, sans-serif; }
+
+  /* loop diagram */
+  .loop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+  @media (max-width: 720px) { .loop { grid-template-columns: 1fr; } }
+  .loop svg { width: 100%; height: auto; max-width: 420px; justify-self: center; }
+  .loop .node { cursor: pointer; }
+  .loop .node rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; transition: fill .2s, stroke .2s; }
+  .loop .node.on rect { fill: var(--accent-soft); stroke: var(--accent); }
+  .loop .node text { fill: var(--text); font-size: 14px; font-weight: 600; }
+  .loop .node .sub { fill: var(--muted); font-size: 11px; font-weight: 400; }
+  .loop .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .loop .arrow-label { fill: var(--muted); font-size: 11px; }
+  .step-detail { min-height: 200px; }
+
+  /* anatomy */
+  .file { display: flex; flex-direction: column; }
+  .file .name { font-family: var(--mono); font-size: .85rem; color: var(--accent); }
+  .file pre { max-height: 260px; font-size: .78rem; }
+  .flow svg { width: 100%; height: auto; }
+  .flow rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .flow .hl rect { fill: var(--accent-soft); stroke: var(--accent); }
+  .flow text { fill: var(--text); font-size: 13px; }
+  .flow .mono { font-family: var(--mono); font-size: 12px; }
+  .flow .sub { fill: var(--muted); font-size: 11px; }
+  .flow path { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+
+  /* demo */
+  .app { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 10px; }
+  @media (max-width: 820px) { .app { grid-template-columns: 1fr; } }
+  .pane { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; min-width: 0; }
+  .pane-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+  .pane .soal { font-size: .88rem; }
+  .pane .soal ol { padding-left: 18px; margin: 6px 0; }
+  .editor-wrap { position: relative; flex: 1; display: flex; }
+  .gutter { font-family: var(--mono); font-size: 13px; line-height: 20px; color: var(--muted); text-align: right; padding: 8px 6px; user-select: none; background: var(--surface-2); border: 1px solid var(--border); border-right: none; border-radius: 6px 0 0 6px; white-space: pre; overflow: hidden; }
+  .gutter .mk { color: var(--accent); font-weight: 700; }
+  textarea.code { flex: 1; min-width: 0; min-height: 400px; resize: vertical; font-family: var(--mono); font-size: 13px; line-height: 20px; padding: 8px 10px; background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 0 6px 6px 0; tab-size: 2; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
+  .bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .todo-id { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 1.1rem; }
+  .todo-title { font-size: .9rem; margin: 4px 0 10px; }
+  .btns { display: flex; gap: 6px; }
+  .reveal-box { margin-top: 10px; font-size: .85rem; }
+  .reveal-box .label { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: 8px; }
+  .usage { margin-top: auto; padding-top: 12px; font-size: .78rem; }
+  .usage table { width: 100%; border-collapse: collapse; }
+  .usage td, .usage th { padding: 3px 4px; text-align: left; border-bottom: 1px solid var(--border); }
+  .usage th { font-weight: 600; color: var(--muted); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.h { background: var(--warn); } .dot.r { background: var(--accent); }
+  .result { margin-top: 14px; }
+  .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 720px) { .diff { grid-template-columns: 1fr; } }
+  .diff pre { font-size: .76rem; max-height: 420px; }
+  .diff .add { background: var(--ok-soft); display: block; }
+  .diff .mine { background: var(--warn-soft); display: block; }
+  .badge { display: inline-block; font-size: .72rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); }
+  .badge.ok { color: var(--ok); border-color: var(--ok); }
+
+  /* attempts chart */
+  .chart svg { width: 100%; height: auto; }
+  .chart .axis { stroke: var(--border); }
+  .chart text { fill: var(--muted); font-size: 11px; }
+  .legend { display: flex; gap: 14px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+
+  .not { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .not span { border: 1px dashed var(--border); border-radius: 999px; padding: 4px 12px; font-size: .85rem; color: var(--muted); text-decoration: line-through; }
+  .theme-toggle { position: fixed; top: 12px; right: 12px; font-size: .8rem; padding: 4px 10px; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="theme" aria-label="Toggle color theme">theme</button>
+<main>
+
+<p class="kicker">Code Gym</p>
+<h1>Notes you can redo.</h1>
+<p class="lede">You learn a concept and write annotated code about it. Reading it again later teaches little. Code Gym turns that note into a drill with gaps, so next time you <em>write</em> the code instead of re-reading it, and it keeps a record of how much help you needed.</p>
+
+<!-- 1. The loop -->
+<h2>The loop</h2>
+<p class="muted">Click a step.</p>
+<div class="loop">
+  <svg viewBox="0 0 420 380" role="img" aria-labelledby="loopTitle">
+    <title id="loopTitle">Cycle: Note, generate, Practice, fill in, Attempt, repeat</title>
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color: var(--muted)"></path>
+      </marker>
+    </defs>
+    <path class="arrow" d="M210 82 Q 330 100 340 150" marker-end="url(#ah)"></path>
+    <text class="arrow-label" x="318" y="100">skill</text>
+    <path class="arrow" d="M340 232 Q 330 290 260 304" marker-end="url(#ah)"></path>
+    <text class="arrow-label" x="318" y="292">you fill</text>
+    <path class="arrow" d="M160 304 Q 90 290 80 232" marker-end="url(#ah)"></path>
+    <text class="arrow-label" x="48" y="292">submit</text>
+    <path class="arrow" d="M80 150 Q 90 100 128 84" marker-end="url(#ah)"></path>
+    <text class="arrow-label" x="40" y="100">repeat</text>
+    <g class="node" data-step="0" tabindex="0" role="button"><rect x="130" y="40" width="160" height="56" rx="10"></rect><text x="210" y="66" text-anchor="middle">Note</text><text class="sub" x="210" y="84" text-anchor="middle">notes/generics.md</text></g>
+    <g class="node" data-step="1" tabindex="0" role="button"><rect x="260" y="160" width="150" height="64" rx="10"></rect><text x="335" y="188" text-anchor="middle">Practice</text><text class="sub" x="335" y="206" text-anchor="middle">soal · scaffold · solution</text></g>
+    <g class="node" data-step="2" tabindex="0" role="button"><rect x="140" y="282" width="140" height="56" rx="10"></rect><text x="210" y="308" text-anchor="middle">Drill</text><text class="sub" x="210" y="326" text-anchor="middle">editor · hint · reveal</text></g>
+    <g class="node" data-step="3" tabindex="0" role="button"><rect x="10" y="160" width="150" height="64" rx="10"></rect><text x="85" y="188" text-anchor="middle">Attempt</text><text class="sub" x="85" y="206" text-anchor="middle">practice-generics-NN.json</text></g>
+  </svg>
+  <div class="card step-detail" id="stepDetail" aria-live="polite"></div>
+</div>
+
+<!-- 2. Anatomy -->
+<h2>One Note becomes three files</h2>
+<p class="muted">The <code>generate-practice</code> skill runs in Claude Code, not in the app. The app only reads what it wrote.</p>
+<div class="flow card">
+  <svg viewBox="0 0 900 200" role="img" aria-label="notes/generics.md fans out to soal.md, scaffold.ts and solution.json">
+    <g class="hl"><rect x="360" y="10" width="180" height="52" rx="8"></rect></g>
+    <text class="mono" x="450" y="34" text-anchor="middle">notes/generics.md</text>
+    <text class="sub" x="450" y="52" text-anchor="middle">Note · you write this</text>
+    <path d="M450 62 L450 90 L150 90 L150 120" marker-end="url(#ah)"></path>
+    <path d="M450 90 L450 120" marker-end="url(#ah)"></path>
+    <path d="M450 90 L750 90 L750 120" marker-end="url(#ah)"></path>
+    <text class="sub" x="470" y="84">generate-practice</text>
+    <rect x="50" y="122" width="200" height="66" rx="8"></rect>
+    <text class="mono" x="150" y="148" text-anchor="middle">soal.md</text>
+    <text class="sub" x="150" y="168" text-anchor="middle">Soal · what to achieve</text>
+    <rect x="350" y="122" width="200" height="66" rx="8"></rect>
+    <text class="mono" x="450" y="148" text-anchor="middle">scaffold.ts</text>
+    <text class="sub" x="450" y="168" text-anchor="middle">Scaffold · code with Todo gaps</text>
+    <rect x="650" y="122" width="200" height="66" rx="8"></rect>
+    <text class="mono" x="750" y="148" text-anchor="middle">solution.json</text>
+    <text class="sub" x="750" y="168" text-anchor="middle">Hint + Solution per Todo</text>
+  </svg>
+</div>
+
+<details>
+<summary>See the real files for the generics Practice</summary>
+<div class="body grid3">
+  <div class="file"><span class="name">soal.md</span><pre id="fSoal"></pre></div>
+  <div class="file"><span class="name">scaffold.ts</span><pre id="fScaffold"></pre></div>
+  <div class="file"><span class="name">solution.json</span><pre id="fSolution"></pre></div>
+</div>
+</details>
+
+<details>
+<summary>Rules the generator follows</summary>
+<div class="body">
+  <ul>
+    <li>3 to 6 Todos, ordered so each builds on the one before. Each is a coherent chunk (a type, a function), never a single token.</li>
+    <li>Marker format: a one-line comment containing <code>TODO-NN: title</code>, followed by three empty lines.</li>
+    <li>Imports and usage lines from the Note stay in the Scaffold, so the reader knows what must compile.</li>
+    <li>A Hint names the concept, never the code. The Soal contains no solution code.</li>
+    <li>Splicing every Solution under its marker must produce a complete, compiling file.</li>
+  </ul>
+</div>
+</details>
+
+<!-- 3. Demo -->
+<h2>Try it: the three-pane screen</h2>
+<p class="muted">A working replica of the app's practice view, using the same marker logic as <code>src/practice.ts</code>. Move the cursor between Todos, ask for a hint, type something, submit.</p>
+
+<div class="app">
+  <div class="pane">
+    <div class="pane-title">Soal</div>
+    <div class="soal">
+      <strong>Generics in TypeScript</strong>
+      <p>Make the file compile with full type safety and no <code>any</code>. Write, in order:</p>
+      <ol>
+        <li><code>first</code>: first element of an array, or <code>undefined</code>.</li>
+        <li><code>Box&lt;T&gt;</code> with <code>value</code> and <code>map</code>.</li>
+        <li>A factory <code>box</code> that implements <code>map</code>.</li>
+        <li><code>longest</code>: two values with a numeric <code>length</code>.</li>
+      </ol>
+      <p class="muted">Self-check: <code>longest(1, 2)</code> must be a type error.</p>
+    </div>
+  </div>
+  <div class="pane">
+    <div class="pane-title">Scaffold <span id="cursorInfo" class="muted"></span></div>
+    <div class="editor-wrap">
+      <div class="gutter" id="gutter" aria-hidden="true"></div>
+      <textarea class="code" id="code" spellcheck="false" aria-label="Scaffold editor"></textarea>
+    </div>
+    <div class="bar">
+      <button id="reset">new attempt</button>
+      <button class="primary" id="submit">submit</button>
+    </div>
+  </div>
+  <div class="pane" aria-live="polite">
+    <div class="pane-title">Active Todo</div>
+    <div class="todo-id" id="todoId"></div>
+    <div class="todo-title" id="todoTitle"></div>
+    <div class="btns">
+      <button id="hintBtn" aria-pressed="false">hint</button>
+      <button id="revealBtn" aria-pressed="false">reveal</button>
+    </div>
+    <div class="reveal-box" id="revealBox"></div>
+    <div class="usage">
+      <table>
+        <thead><tr><th>Todo</th><th>hint</th><th>reveal</th></tr></thead>
+        <tbody id="usage"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="result" id="result" hidden>
+  <div class="card">
+    <h3 id="resultTitle"></h3>
+    <p class="muted">After submit the editor becomes a diff: your code on the left, the Scaffold with every Solution spliced in on the right. Lines that differ are highlighted.</p>
+    <div class="diff">
+      <div><span class="pane-title">your code</span><pre id="mine"></pre></div>
+      <div><span class="pane-title">full solution</span><pre id="theirs"></pre></div>
+    </div>
+    <details>
+      <summary>The Attempt file that gets written</summary>
+      <div class="body"><pre id="attemptJson"></pre></div>
+    </details>
+  </div>
+</div>
+
+<details>
+<summary>How the active Todo and your answers are found</summary>
+<div class="body">
+  <p>Four pure functions in <code>src/practice.ts</code> do everything. The demo above runs JavaScript ports of them.</p>
+  <div class="flow card" style="margin: 10px 0">
+    <svg viewBox="0 0 560 230" role="img" aria-label="Scaffold lines grouped into regions under each marker">
+      <rect x="10" y="10" width="300" height="210" rx="8"></rect>
+      <g class="hl"><rect x="20" y="22" width="280" height="22" rx="4"></rect></g>
+      <text class="mono" x="28" y="38">// TODO-01: declare `first`…</text>
+      <text class="mono" x="28" y="62">function first&lt;T&gt;(…) {</text>
+      <text class="mono" x="28" y="82">  return items[0];</text>
+      <text class="mono" x="28" y="102">}</text>
+      <g class="hl"><rect x="20" y="114" width="280" height="22" rx="4"></rect></g>
+      <text class="mono" x="28" y="130">// TODO-02: declare `Box&lt;T&gt;`…</text>
+      <text class="mono" x="28" y="154">type Box&lt;T&gt; = { … }</text>
+      <text class="mono" x="28" y="178">█ cursor</text>
+      <path d="M316 52 L330 52 L330 106 L316 106"></path>
+      <text x="340" y="76">region TODO-01</text>
+      <text class="sub" x="340" y="94">= your answer for 01</text>
+      <path d="M316 144 L330 144 L330 210 L316 210"></path>
+      <text x="340" y="170">region TODO-02</text>
+      <text class="sub" x="340" y="188">cursor inside, so 02 is active</text>
+    </svg>
+  </div>
+  <ul>
+    <li><code>parseMarkers</code>: every line matching <code>TODO-(\d\d)</code> is a marker; the title is the text after the colon.</li>
+    <li><code>extractRegions</code>: the lines after a marker up to the next marker (or end of file), trimmed. That is your answer for that Todo.</li>
+    <li><code>activeTodo</code>: nearest marker at or above the cursor line; TODO-01 if the cursor is above all markers.</li>
+    <li><code>spliceSolution</code>: replace each region with its Solution. The full solution is always derived, never stored.</li>
+  </ul>
+  <p class="muted">Because answers are found by marker position, you can write anything in a region, and the markers must stay in place.</p>
+</div>
+</details>
+
+<!-- 4. Progress -->
+<h2>Why keep every Attempt</h2>
+<p>Each submit records, per Todo, whether you used the hint and whether you revealed the solution. Redo the same Practice a few days apart and the pattern shows what has actually stuck.</p>
+<div class="card chart">
+  <div class="legend"><span style="--c: var(--ok)">solved alone</span><span style="--c: var(--warn)">needed hint</span><span style="--c: var(--accent)">revealed</span></div>
+  <svg id="chart" viewBox="0 0 600 210" role="img" aria-label="Illustrative chart: Todos needing help shrink across five attempts"></svg>
+  <p class="muted" style="font-size:.8rem;margin:0">Illustrative data: four Todos across five Attempts. The app stores the raw flags; it does not draw this chart.</p>
+</div>
+
+<details>
+<summary>What an Attempt file holds</summary>
+<div class="body">
+<pre>practices/generics/attempts/practice-generics-01.json
+{
+  "slug": "generics",
+  "attemptNo": 1,
+  "submittedAt": "2026-11-03T14:00:00.000Z",
+  "code": "&lt;full editor contents&gt;",
+  "todos": [
+    { "id": "TODO-01", "answer": "&lt;your region&gt;", "hintUsed": true, "revealUsed": false }
+  ]
+}</pre>
+  <p class="muted" style="margin-top:8px">Numbered per Practice (<code>01</code>, <code>02</code>, …), plain JSON, committed to git with everything else.</p>
+</div>
+</details>
+
+<!-- 5. Scope -->
+<h2>Deliberately small</h2>
+<p>A single-user local tool: one Bun process serves the API and the React client on one port. The judgement of "did I get it" is you reading the diff.</p>
+<div class="not"><span>grading</span><span>running tests</span><span>Claude API in the app</span><span>autosave</span><span>auth</span><span>database</span></div>
+
+<details>
+<summary>Architecture at a glance</summary>
+<div class="body">
+  <div class="flow card" style="margin-bottom:10px">
+    <svg viewBox="0 0 640 150" role="img" aria-label="Browser talks to one Bun process which reads and writes the practices folder">
+      <rect x="10" y="40" width="170" height="70" rx="8"></rect>
+      <text x="95" y="70" text-anchor="middle">Browser</text>
+      <text class="sub" x="95" y="90" text-anchor="middle">React + CodeMirror</text>
+      <path d="M180 75 L240 75" marker-end="url(#ah)"></path>
+      <text class="sub" x="190" y="66">/api</text>
+      <g class="hl"><rect x="240" y="40" width="170" height="70" rx="8"></rect></g>
+      <text x="325" y="70" text-anchor="middle">Bun.serve</text>
+      <text class="sub" x="325" y="90" text-anchor="middle">src/server.ts</text>
+      <path d="M410 75 L470 75" marker-end="url(#ah)"></path>
+      <rect x="470" y="40" width="160" height="70" rx="8"></rect>
+      <text class="mono" x="550" y="70" text-anchor="middle">practices/</text>
+      <text class="sub" x="550" y="90" text-anchor="middle">read files, write attempts</text>
+    </svg>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+    <tr><td style="padding:4px 0"><code>GET /api/practices</code></td><td>list with attempt counts</td></tr>
+    <tr><td style="padding:4px 0"><code>GET /api/practices/:slug</code></td><td>soal, scaffold, solution</td></tr>
+    <tr><td style="padding:4px 0"><code>GET /api/practices/:slug/attempts</code></td><td>saved Attempts</td></tr>
+    <tr><td style="padding:4px 0"><code>POST /api/practices/:slug/attempts</code></td><td>write next Attempt</td></tr>
+  </table>
+  <p class="muted" style="margin-top:8px">Why one process: <code>docs/adr/0001-bun-single-process.md</code>.</p>
+</div>
+</details>
+
+<details>
+<summary>Vocabulary</summary>
+<div class="body">
+  <dl style="display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0">
+    <dt><b>Note</b></dt><dd style="margin:0">markdown of annotated snippets about one concept; the generator's input</dd>
+    <dt><b>Practice</b></dt><dd style="margin:0">the bundle generated from one Note</dd>
+    <dt><b>Soal</b></dt><dd style="margin:0">what the finished Scaffold must achieve</dd>
+    <dt><b>Scaffold</b></dt><dd style="margin:0">the incomplete code you fill in</dd>
+    <dt><b>Todo</b></dt><dd style="margin:0">one numbered gap; has one Hint and one Solution</dd>
+    <dt><b>Hint</b></dt><dd style="margin:0">a nudge that does not contain the code</dd>
+    <dt><b>Solution</b></dt><dd style="margin:0">the code that completes one Todo</dd>
+    <dt><b>Attempt</b></dt><dd style="margin:0">one submitted fill, with hint/reveal usage</dd>
+  </dl>
+  <p class="muted" style="margin-top:8px">Source of truth: <code>GLOSSARY.md</code>.</p>
+</div>
+</details>
+
+<h2>Start</h2>
+<pre>bun install
+bun run dev      # http://localhost:3000
+# in Claude Code:  generate practice from notes/&lt;slug&gt;.md</pre>
+
+</main>
+
+<script>
+// Fixture copied from practices/generics/ so this page works opened as a plain file.
+const SOAL = `# Generics in TypeScript
+
+Make the file compile with full type safety and no \`any\`.
+
+Write, in order:
+
+1. A generic function \`first\` that returns the first element of an array,
+   or \`undefined\` when the array is empty.
+2. A generic type \`Box<T>\` holding a \`value\` of type \`T\` and a \`map\` method.
+3. A factory \`box\` that builds a \`Box<T>\` and implements \`map\`.
+4. A function \`longest\` that accepts two values with a numeric \`length\`.
+
+Self-check: \`longest(1, 2)\` must be a type error.`;
+
+const SCAFFOLD = `// Generics in TypeScript: fill in each TODO so the usage at the bottom type-checks.
+
+// TODO-01: declare a generic function \`first\` that returns the first element or undefined
+
+
+
+// TODO-02: declare a generic type \`Box<T>\` with a \`value\` and a \`map\` method
+
+
+
+// TODO-03: write a factory \`box\` that builds a \`Box<T>\` and implements \`map\`
+
+
+
+// TODO-04: declare \`longest\`, constrained so both arguments have a numeric \`length\`
+
+
+
+// Usage: must compile without errors.
+const a = first([1, 2, 3]);
+const b = first(["x", "y"]);
+const len = box("hello").map((s) => s.length);
+const l1 = longest("ab", "abc");
+const l2 = longest([1], [1, 2, 3]);
+console.log(a, b, len.value, l1, l2);
+`;
+
+const SOLUTION = {
+  slug: "generics", title: "Generics in TypeScript", language: "ts",
+  todos: [
+    { id: "TODO-01", title: "declare a generic function `first` that returns the first element or undefined",
+      hint: "Put a type parameter in angle brackets after the function name and use it for both the array element type and the return type. The return type must admit the empty-array case.",
+      solution: "function first<T>(items: T[]): T | undefined {\n  return items[0];\n}" },
+    { id: "TODO-02", title: "declare a generic type `Box<T>` with a `value` and a `map` method",
+      hint: "A type alias can take a type parameter too. The `map` method needs its own second type parameter for the result, and returns a Box of that type.",
+      solution: "type Box<T> = {\n  value: T;\n  map<U>(fn: (value: T) => U): Box<U>;\n};" },
+    { id: "TODO-03", title: "write a factory `box` that builds a `Box<T>` and implements `map`",
+      hint: "Return an object literal with `value` and `map`. Inside `map`, call `box` again on the mapped value so the new Box gets the new type.",
+      solution: "function box<T>(value: T): Box<T> {\n  return {\n    value,\n    map: (fn) => box(fn(value)),\n  };\n}" },
+    { id: "TODO-04", title: "declare `longest`, constrained so both arguments have a numeric `length`",
+      hint: "Use `extends` on the type parameter to require a `length: number` property. Compare lengths and return whichever argument is longer.",
+      solution: "function longest<T extends { length: number }>(a: T, b: T): T {\n  return a.length >= b.length ? a : b;\n}" },
+  ],
+};
+
+// Ports of src/practice.ts
+const MARKER = /TODO-(\d\d)\s*:?\s*(.*?)\s*(?:\*\/|-->)?\s*$/;
+function parseMarkers(code) {
+  const out = [];
+  code.split("\n").forEach((text, line) => { const m = MARKER.exec(text); if (m) out.push({ id: `TODO-${m[1]}`, title: m[2], line }); });
+  return out;
+}
+function extractRegions(code) {
+  const lines = code.split("\n"), markers = parseMarkers(code), out = {};
+  markers.forEach((m, i) => { const end = i + 1 < markers.length ? markers[i + 1].line : lines.length; out[m.id] = lines.slice(m.line + 1, end).join("\n").trim(); });
+  return out;
+}
+function spliceSolution(scaffold, todos) {
+  const lines = scaffold.split("\n"), markers = parseMarkers(scaffold), byId = new Map(todos.map((t) => [t.id, t.solution])), out = [];
+  let cursor = 0;
+  markers.forEach((m, i) => { const end = i + 1 < markers.length ? markers[i + 1].line : lines.length; out.push(...lines.slice(cursor, m.line + 1), byId.get(m.id) ?? "", ""); cursor = end; });
+  out.push(...lines.slice(cursor));
+  return out.join("\n");
+}
+function activeTodo(markers, cursorLine) {
+  let found = markers[0];
+  for (const m of markers) if (m.line <= cursorLine) found = m;
+  return found;
+}
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+// Theme toggle
+$("theme").onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+};
+
+// 1. Loop stepper
+const STEPS = [
+  ["1 · Write a Note", "While learning, you write <code>notes/generics.md</code>: short code snippets with comments explaining <em>why</em>. This is the only thing you author by hand.<pre>// `T` is a type parameter. TypeScript infers it.\nfunction first&lt;T&gt;(items: T[]): T | undefined {\n  return items[0];\n}</pre>"],
+  ["2 · Generate a Practice", "In Claude Code you say <code>generate practice from notes/generics.md</code>. The skill writes three files under <code>practices/generics/</code>: the Soal, a Scaffold with numbered <code>TODO-NN</code> gaps, and <code>solution.json</code> with a Hint and Solution for each gap. Regenerating never touches past Attempts."],
+  ["3 · Drill", "<code>bun run dev</code>, open the Practice. Three panes: the Soal on the left, the Scaffold in an editor in the middle, and on the right the Todo your cursor is in, with <b>hint</b> and <b>reveal</b> buttons. Every click on those is remembered per Todo."],
+  ["4 · Attempt saved", "On submit the server cuts your code into regions by marker, writes <code>attempts/practice-generics-01.json</code> with each answer and its hint/reveal flags, and the editor turns into a diff against the full solution. Next time, start a new attempt and see if you need fewer hints."],
+];
+const nodes = document.querySelectorAll(".loop .node");
+function showStep(i) {
+  nodes.forEach((n) => n.classList.toggle("on", +n.dataset.step === i));
+  $("stepDetail").innerHTML = `<h3>${STEPS[i][0]}</h3><p>${STEPS[i][1]}</p>`;
+}
+nodes.forEach((n) => {
+  n.addEventListener("click", () => showStep(+n.dataset.step));
+  n.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showStep(+n.dataset.step); } });
+});
+showStep(0);
+
+// 2. Real files
+$("fSoal").textContent = SOAL;
+$("fScaffold").textContent = SCAFFOLD;
+$("fSolution").textContent = JSON.stringify(SOLUTION, null, 2);
+
+// 3. Demo
+const code = $("code");
+let usage = {};
+function resetUsage() { usage = Object.fromEntries(SOLUTION.todos.map((t) => [t.id, { hint: false, reveal: false }])); }
+function currentLine() { return code.value.slice(0, code.selectionStart).split("\n").length - 1; }
+function current() {
+  const m = activeTodo(parseMarkers(code.value), currentLine());
+  return m && SOLUTION.todos.find((t) => t.id === m.id);
+}
+function renderGutter() {
+  const marks = new Set(parseMarkers(code.value).map((m) => m.line));
+  $("gutter").innerHTML = code.value.split("\n").map((_, i) => marks.has(i) ? `<span class="mk">${i + 1}</span>` : `${i + 1}`).join("\n");
+}
+function renderSide() {
+  const t = current();
+  $("cursorInfo").textContent = `· line ${currentLine() + 1}`;
+  if (!t) { $("todoId").textContent = "no markers"; $("todoTitle").textContent = ""; $("revealBox").innerHTML = ""; return; }
+  const u = usage[t.id];
+  $("todoId").textContent = t.id;
+  $("todoTitle").textContent = t.title;
+  $("hintBtn").setAttribute("aria-pressed", u.hint);
+  $("revealBtn").setAttribute("aria-pressed", u.reveal);
+  $("revealBox").innerHTML =
+    (u.hint ? `<div class="label">hint</div><div>${esc(t.hint)}</div>` : "") +
+    (u.reveal ? `<div class="label">solution</div><pre>${esc(t.solution)}</pre>` : "");
+  $("usage").innerHTML = SOLUTION.todos.map((x) =>
+    `<tr${x.id === t.id ? ' style="font-weight:600"' : ""}><td>${x.id}</td><td><span class="dot ${usage[x.id].hint ? "h" : ""}"></span></td><td><span class="dot ${usage[x.id].reveal ? "r" : ""}"></span></td></tr>`).join("");
+}
+function refresh() { renderGutter(); renderSide(); }
+function reset() {
+  code.value = SCAFFOLD; resetUsage(); $("result").hidden = true; code.readOnly = false;
+  code.focus(); code.setSelectionRange(SCAFFOLD.indexOf("TODO-01"), SCAFFOLD.indexOf("TODO-01")); refresh();
+}
+let attemptNo = 0;
+["input", "click", "keyup", "select"].forEach((ev) => code.addEventListener(ev, refresh));
+code.addEventListener("scroll", () => { $("gutter").scrollTop = code.scrollTop; });
+$("hintBtn").onclick = () => { const t = current(); if (t) { usage[t.id].hint = true; renderSide(); } };
+$("revealBtn").onclick = () => { const t = current(); if (t) { usage[t.id].reveal = true; renderSide(); } };
+$("reset").onclick = reset;
+$("submit").onclick = () => {
+  const regions = extractRegions(code.value);
+  attemptNo++;
+  const attempt = {
+    slug: SOLUTION.slug, attemptNo, submittedAt: new Date().toISOString(), code: code.value,
+    todos: SOLUTION.todos.map((t) => ({ id: t.id, answer: regions[t.id] ?? "", hintUsed: usage[t.id].hint, revealUsed: usage[t.id].reveal })),
+  };
+  const full = spliceSolution(SCAFFOLD, SOLUTION.todos);
+  const mineLines = code.value.split("\n"), fullLines = full.split("\n");
+  const mineSet = new Set(mineLines.map((l) => l.trim())), fullSet = new Set(fullLines.map((l) => l.trim()));
+  // shortcut: set-based line highlight, not a real LCS diff; the app uses @codemirror/merge
+  $("mine").innerHTML = mineLines.map((l) => fullSet.has(l.trim()) ? esc(l) : `<span class="mine">${esc(l) || " "}</span>`).join("\n");
+  $("theirs").innerHTML = fullLines.map((l) => mineSet.has(l.trim()) ? esc(l) : `<span class="add">${esc(l) || " "}</span>`).join("\n");
+  $("attemptJson").textContent = `attempts/practice-generics-${String(attemptNo).padStart(2, "0")}.json\n` + JSON.stringify(attempt, null, 2);
+  const solved = attempt.todos.filter((t) => t.answer && !t.revealUsed).length;
+  $("resultTitle").innerHTML = `Attempt ${String(attemptNo).padStart(2, "0")} saved <span class="badge ok">${solved}/${attempt.todos.length} filled without reveal</span>`;
+  $("result").hidden = false; code.readOnly = true;
+  $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+};
+resetUsage(); code.value = SCAFFOLD; refresh();
+
+// 4. Illustrative progress chart: per attempt, stacked count of Todos by help level
+const DATA = [[0, 2, 2], [1, 2, 1], [2, 2, 0], [3, 1, 0], [4, 0, 0]]; // [solo, hint, reveal]
+(function drawChart() {
+  const svg = $("chart"), W = 600, H = 210, left = 40, bottom = 180, top = 14, bw = 56, gap = (W - left - 20 - bw * 5) / 4;
+  const y = (v) => bottom - (v / 4) * (bottom - top);
+  const colors = ["var(--ok)", "var(--warn)", "var(--accent)"];
+  let s = `<line class="axis" x1="${left}" y1="${bottom}" x2="${W - 10}" y2="${bottom}"/>`;
+  for (let v = 0; v <= 4; v++) s += `<text x="${left - 10}" y="${y(v) + 4}" text-anchor="end">${v}</text>` + (v ? `<line class="axis" x1="${left}" y1="${y(v)}" x2="${W - 10}" y2="${y(v)}" stroke-dasharray="2 4"/>` : "");
+  DATA.forEach((d, i) => {
+    const x = left + 10 + i * (bw + gap);
+    let acc = 0;
+    d.forEach((v, k) => { if (v) s += `<rect x="${x}" y="${y(acc + v)}" width="${bw}" height="${y(acc) - y(acc + v) - 2}" rx="3" fill="${colors[k]}"><title>${["solved alone", "needed hint", "revealed"][k]}: ${v}</title></rect>`; acc += v; });
+    s += `<text x="${x + bw / 2}" y="${bottom + 18}" text-anchor="middle">#${String(i + 1).padStart(2, "0")}</text>`;
+  });
+  svg.innerHTML = s;
+})();
+</script>
+</body>
+</html>
