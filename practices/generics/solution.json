@@ -1,0 +1,31 @@
+{
+  "slug": "generics",
+  "title": "Generics in TypeScript",
+  "language": "ts",
+  "todos": [
+    {
+      "id": "TODO-01",
+      "title": "declare a generic function `first` that returns the first element or undefined",
+      "hint": "Put a type parameter in angle brackets after the function name and use it for both the array element type and the return type. The return type must admit the empty-array case.",
+      "solution": "function first<T>(items: T[]): T | undefined {\n  return items[0];\n}"
+    },
+    {
+      "id": "TODO-02",
+      "title": "declare a generic type `Box<T>` with a `value` and a `map` method",
+      "hint": "A type alias can take a type parameter too. The `map` method needs its own second type parameter for the result, and returns a Box of that type.",
+      "solution": "type Box<T> = {\n  value: T;\n  map<U>(fn: (value: T) => U): Box<U>;\n};"
+    },
+    {
+      "id": "TODO-03",
+      "title": "write a factory `box` that builds a `Box<T>` and implements `map`",
+      "hint": "Return an object literal with `value` and `map`. Inside `map`, call `box` again on the mapped value so the new Box gets the new type.",
+      "solution": "function box<T>(value: T): Box<T> {\n  return {\n    value,\n    map: (fn) => box(fn(value)),\n  };\n}"
+    },
+    {
+      "id": "TODO-04",
+      "title": "declare `longest`, constrained so both arguments have a numeric `length`",
+      "hint": "Use `extends` on the type parameter to require a `length: number` property. Compare lengths and return whichever argument is longer.",
+      "solution": "function longest<T extends { length: number }>(a: T, b: T): T {\n  return a.length >= b.length ? a : b;\n}"
+    }
+  ]
+}
