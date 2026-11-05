@@ -45,17 +45,27 @@ function Home() {
       ) : items.length === 0 ? (
         <p>No practices yet. Run the generate-practice skill on a note.</p>
       ) : (
-        <ul>
-          {items.map((p) => (
-            <li key={p.slug}>
-              <a href={`/p/${p.slug}`}>{p.title}</a> · {p.attemptCount} attempt{p.attemptCount === 1 ? "" : "s"}
-              {p.error && <span className="err"> {p.error}</span>}
-            </li>
-          ))}
-        </ul>
+        <PracticeList items={items} />
       )}
     </div>
   );
+}
+
+export function PracticeList({ items }: { items: Listing[] }) {
+  const groups = Object.groupBy(items, (p) => p.slug.split("/").slice(0, -1).join("/"));
+  return Object.entries(groups).map(([folder, practices]) => (
+    <section key={folder}>
+      <h2>{folder ? folder.replaceAll("/", " / ") : "General"}</h2>
+      <ul>
+        {practices!.map((p) => (
+          <li key={p.slug}>
+            <a href={`/p/${p.slug}`}>{p.title}</a> · {p.attemptCount} attempt{p.attemptCount === 1 ? "" : "s"}
+            {p.error && <span className="err"> {p.error}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ));
 }
 
 function PracticeView({ slug }: { slug: string }) {
