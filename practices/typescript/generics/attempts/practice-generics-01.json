@@ -1,0 +1,32 @@
+{
+  "slug": "generics",
+  "attemptNo": 1,
+  "submittedAt": "2026-11-05T10:43:05.284Z",
+  "code": "// Generics in TypeScript: fill in each TODO so the usage at the bottom type-checks.\n\n// TODO-01: declare a generic function `first` that returns the first element or undefined\nfunction first<T>(items: T[]): T | undefined {\n  return items[0];\n}\n\n\n// TODO-02: declare a generic type `Box<T>` with a `value` and a `map` method\ntype Box<T> = {\n  value: T;\n  map<U>(fn: (value: T) => U): Box<U>;\n};\n\n\n// TODO-03: write a factory `box` that builds a `Box<T>` and implements `map`\n\n\n\n// TODO-04: declare `longest`, constrained so both arguments have a numeric `length`\n\n\n\n// Usage: must compile without errors.\nconst a = first([1, 2, 3]);\nconst b = first([\"x\", \"y\"]);\nconst len = box(\"hello\").map((s) => s.length);\nconst l1 = longest(\"ab\", \"abc\");\nconst l2 = longest([1], [1, 2, 3]);\nconsole.log(a, b, len.value, l1, l2);\n",
+  "todos": [
+    {
+      "id": "TODO-01",
+      "answer": "function first<T>(items: T[]): T | undefined {\n  return items[0];\n}",
+      "hintUsed": true,
+      "revealUsed": true
+    },
+    {
+      "id": "TODO-02",
+      "answer": "type Box<T> = {\n  value: T;\n  map<U>(fn: (value: T) => U): Box<U>;\n};",
+      "hintUsed": true,
+      "revealUsed": true
+    },
+    {
+      "id": "TODO-03",
+      "answer": "",
+      "hintUsed": false,
+      "revealUsed": false
+    },
+    {
+      "id": "TODO-04",
+      "answer": "// Usage: must compile without errors.\nconst a = first([1, 2, 3]);\nconst b = first([\"x\", \"y\"]);\nconst len = box(\"hello\").map((s) => s.length);\nconst l1 = longest(\"ab\", \"abc\");\nconst l2 = longest([1], [1, 2, 3]);\nconsole.log(a, b, len.value, l1, l2);",
+      "hintUsed": false,
+      "revealUsed": false
+    }
+  ]
+}
