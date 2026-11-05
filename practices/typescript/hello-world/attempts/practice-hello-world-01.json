@@ -1,0 +1,32 @@
+{
+  "slug": "typescript/hello-world",
+  "attemptNo": 1,
+  "submittedAt": "2026-11-05T11:50:52.178Z",
+  "code": "// TODO-01: declare a typed function `add` that adds two numbers\nfunction add(a: number, b: number): number {\n  return a:b;\n}\n\n\n\nfunction main(): void {\n  console.log(\"Hello, world!\");\n\n  // TODO-02: declare typed constants for the learner profile\n  const name: string = \"Alex\";\n  const age: number = 20;\n  const isLearning: boolean = true;\n\n\n\n  console.log(\"Name:\", name);\n  console.log(\"Age:\", age);\n  console.log(\"Learning TypeScript:\", isLearning);\n\n  // Use let when a variable needs to change; const prevents reassignment.\n  // TODO-03: declare and increment the completed lesson count\n  let lessonsCompleted: number = 0;\n  lessonsCompleted = add(lessonsCompleted, 1);\n\n\n  console.log(\"Lessons completed:\", lessonsCompleted);\n\n  // TypeScript can also infer a type from the assigned value.\n  // TODO-04: declare an inferred greeting and sum\n  const greeting = \"Keep practicing!\";\n  const sum = add(2,3);\n\n  console.log(\"2 + 3 =\", sum);\n  console.log(greeting);\n}\n\nmain();\n",
+  "todos": [
+    {
+      "id": "TODO-01",
+      "answer": "function add(a: number, b: number): number {\n  return a:b;\n}\n\n\n\nfunction main(): void {\n  console.log(\"Hello, world!\");",
+      "hintUsed": true,
+      "revealUsed": true
+    },
+    {
+      "id": "TODO-02",
+      "answer": "const name: string = \"Alex\";\n  const age: number = 20;\n  const isLearning: boolean = true;\n\n\n\n  console.log(\"Name:\", name);\n  console.log(\"Age:\", age);\n  console.log(\"Learning TypeScript:\", isLearning);\n\n  // Use let when a variable needs to change; const prevents reassignment.",
+      "hintUsed": true,
+      "revealUsed": true
+    },
+    {
+      "id": "TODO-03",
+      "answer": "let lessonsCompleted: number = 0;\n  lessonsCompleted = add(lessonsCompleted, 1);\n\n\n  console.log(\"Lessons completed:\", lessonsCompleted);\n\n  // TypeScript can also infer a type from the assigned value.",
+      "hintUsed": true,
+      "revealUsed": true
+    },
+    {
+      "id": "TODO-04",
+      "answer": "const greeting = \"Keep practicing!\";\n  const sum = add(2,3);\n\n  console.log(\"2 + 3 =\", sum);\n  console.log(greeting);\n}\n\nmain();",
+      "hintUsed": true,
+      "revealUsed": true
+    }
+  ]
+}
