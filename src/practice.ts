@@ -52,8 +52,8 @@ export function activeTodo(markers: Marker[], cursorLine: number): Marker | unde
   return found;
 }
 
-export function isSlug(s: string): boolean {
-  return /^[a-z0-9-]+$/.test(s);
+export function isPracticePath(s: string): boolean {
+  return /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/.test(s);
 }
 
 export function assertSolution(x: unknown): Solution {

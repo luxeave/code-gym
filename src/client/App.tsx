@@ -4,7 +4,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { MergeView } from "@codemirror/merge";
 import { EditorState, type Extension } from "@codemirror/state";
 import { marked } from "marked";
-import { activeTodo, parseMarkers, spliceSolution, type Solution } from "../practice";
+import { activeTodo, isPracticePath, parseMarkers, spliceSolution, type Solution } from "../practice";
 
 type Practice = { soal: string; scaffold: string; solution: Solution };
 type Usage = Record<string, { hintUsed: boolean; revealUsed: boolean }>;
@@ -26,8 +26,8 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function App() {
-  const m = /^\/p\/([a-z0-9-]+)$/.exec(location.pathname);
-  return m ? <PracticeView slug={m[1]} /> : <Home />;
+  const path = location.pathname.startsWith("/p/") ? location.pathname.slice(3) : "";
+  return isPracticePath(path) ? <PracticeView slug={path} /> : <Home />;
 }
 
 function Home() {

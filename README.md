@@ -28,7 +28,7 @@ bun run dev        # http://localhost:3000
 bun test           # marker parsing, regions, splice, active Todo
 ```
 
-To add a drill: write `notes/<slug>.md`, then in Claude Code say `generate practice from notes/<slug>.md`. Restart not needed; the home page lists every folder under `practices/`.
+To add a drill: write `notes/<slug>.md`, then in Claude Code say `generate practice from notes/<slug>.md`. Restart not needed; the home page finds folders containing `solution.json` at any depth under `practices/`. You can group practices by language, for example `practices/typescript/generics/`, accessible at `/p/typescript/generics`.
 
 <details>
 <summary><b>The screen</b></summary>
@@ -100,7 +100,7 @@ Everything, attempts included, is meant to be committed to git.
 | `GET /api/practices/:slug/attempts` | saved Attempts |
 | `POST /api/practices/:slug/attempts` | body `{ code, todos: [{ id, hintUsed, revealUsed }] }`, writes the next Attempt |
 
-Slugs must match `^[a-z0-9-]+$`.
+API slugs are paths relative to `practices/`, such as `generics` or `typescript/generics`. Each path segment must match `^[a-z0-9-]+$`. Keep `solution.json` unchanged when moving a practice. Attempts stay inside that practice’s `attempts/` folder, named using the final path segment (for example `practice-generics-02.json`).
 
 </details>
 
