@@ -1,0 +1,31 @@
+{
+  "slug": "hello-world",
+  "title": "Hello World in TypeScript",
+  "language": "ts",
+  "todos": [
+    {
+      "id": "TODO-01",
+      "title": "declare a typed function `add` that adds two numbers",
+      "hint": "Annotate both parameters and the return value with the numeric type.",
+      "solution": "function add(a: number, b: number): number {\n  return a + b;\n}"
+    },
+    {
+      "id": "TODO-02",
+      "title": "declare typed constants for the learner profile",
+      "hint": "Use explicit primitive types for text, a number, and a true-or-false value.",
+      "solution": "  const name: string = \"Alex\";\n  const age: number = 20;\n  const isLearning: boolean = true;"
+    },
+    {
+      "id": "TODO-03",
+      "title": "declare and increment the completed lesson count",
+      "hint": "Use a mutable numeric variable starting at zero, then call the addition function to increase it.",
+      "solution": "  let lessonsCompleted: number = 0;\n  lessonsCompleted = add(lessonsCompleted, 1);"
+    },
+    {
+      "id": "TODO-04",
+      "title": "declare an inferred greeting and sum",
+      "hint": "Let the assigned values determine the types; obtain the sum by calling the addition function.",
+      "solution": "  const greeting = \"Keep practicing!\";\n  const sum = add(2, 3);"
+    }
+  ]
+}
